@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--
+  Content-Security-Policy: defense-in-depth for the HTML report.
+  - Jinja autoescape already prevents HTML injection; CSP is a second fence.
+  - 'unsafe-inline' is included because the template ships with inline <style>
+    and inline event handlers. Removing them would require an external JS file,
+    which breaks the "one-file portable report" property. This trade-off is
+    intentional: the attack surface is a TestResult field displayed in the
+    report, all of which pass through the redaction + autoescape pipeline.
+  - img-src 'self' data: — SVG icons may be inline data URLs.
+  - connect-src 'none' — the report makes no XHR/fetch calls.
+  - frame-ancestors 'none' — no one embeds the report in an iframe.
+-->
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'none';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src https://fonts.gstatic.com;
+    script-src 'unsafe-inline';
+    img-src 'self' data:;
+    connect-src 'none';
+    frame-ancestors 'none';
+    base-uri 'none';
+    form-action 'none';
+">
+<meta name="referrer" content="no-referrer">
+<title>Phlatline — {{ meta.target }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg: #000000;
+        --bg-panel: #0a0a0a;
+        --bg-panel-2: #111111;
+        --border: #1a1a1a;
+        --border-bright: #222;
+        --text: #e6ffe6;
+        --text-dim: #6a7a6a;
+        --text-faint: #3a4a3a;
+
+        --neon-green: #39ff14;
+        --neon-green-glow: rgba(57, 255, 20, 0.55);
+        --neon-red: #ff2e63;
+        --neon-red-glow: rgba(255, 46, 99, 0.55);
+        --neon-amber: #ffb300;
+        --neon-amber-glow: rgba(255, 179, 0, 0.55);
+        --neon-cyan: #00f0ff;
+        --neon-cyan-glow: rgba(0, 240, 255, 0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 13px;
+        line-height: 1.55;
+        min-height: 100vh;
+    }
+
+    body {
+        background:
+            radial-gradient(ellipse 80% 60% at 50% -10%, rgba(57, 255, 20, 0.08), transparent 60%),
+            radial-gradient(ellipse 40% 40% at 100% 100%, rgba(0, 240, 255, 0.04), transparent 70%),
+            var(--bg);
+        padding: 24px 20px 60px;
+    }
+
+    /* Scanlines */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent 0,
+            transparent 2px,
+            rgba(57, 255, 20, 0.012) 2px,
+            rgba(57, 255, 20, 0.012) 3px
+        );
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .wrap { max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
+
+    /* -- Header -- */
+    header {
+        border: 1px solid var(--neon-green);
+        background: linear-gradient(180deg, rgba(57,255,20,0.04), transparent);
+        padding: 22px 26px;
+        margin-bottom: 20px;
+        position: relative;
+        box-shadow: 0 0 0 1px rgba(57,255,20,0.08), 0 0 30px -10px var(--neon-green-glow);
+    }
+    header::before, header::after {
+        content: '';
+        position: absolute; width: 12px; height: 12px;
+        border: 2px solid var(--neon-green);
+    }
+    header::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+    header::after  { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+    .brand {
+        font-family: 'Space Mono', monospace;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 0.3em;
+        color: var(--neon-green);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        opacity: 0.85;
+    }
+    .brand::before { content: '▸ '; }
+
+    h1 {
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 800;
+        font-size: 26px;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        text-shadow: 0 0 20px var(--neon-green-glow);
+        margin-bottom: 4px;
+    }
+    h1 .accent { color: var(--neon-green); }
+
+    .meta-line {
+        color: var(--text-dim);
+        font-size: 11px;
+        margin-top: 8px;
+        display: flex; gap: 18px; flex-wrap: wrap;
+    }
+    .meta-line span strong { color: var(--text); font-weight: 500; }
+
+    /* -- Stat tiles -- */
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+    .stat {
+        border: 1px solid var(--border);
+        background: var(--bg-panel);
+        padding: 14px 16px;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: var(--tile-color, var(--neon-green));
+        box-shadow: 0 0 10px var(--tile-glow, var(--neon-green-glow));
+    }
+    .stat .label {
+        font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+        color: var(--text-dim); margin-bottom: 4px;
+    }
+    .stat .value {
+        font-size: 22px; font-weight: 700; color: var(--tile-color, var(--text));
+        font-variant-numeric: tabular-nums;
+    }
+    .stat.pass  { --tile-color: var(--neon-green); --tile-glow: var(--neon-green-glow); }
+    .stat.fail  { --tile-color: var(--neon-red);   --tile-glow: var(--neon-red-glow); }
+    .stat.error { --tile-color: var(--neon-amber); --tile-glow: var(--neon-amber-glow); }
+    .stat.total { --tile-color: var(--neon-cyan);  --tile-glow: var(--neon-cyan-glow); }
+    .stat.skip  { --tile-color: #888; --tile-glow: rgba(136,136,136,0.4); }
+
+    /* -- Controls -- */
+    .controls {
+        display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        margin-bottom: 14px;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        background: var(--bg-panel);
+    }
+    .controls .group { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+    .controls .label {
+        font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim);
+        text-transform: uppercase; margin-right: 3px;
+    }
+    .chip {
+        display: inline-flex; align-items: center;
+        padding: 5px 10px;
+        border: 1px solid var(--border-bright);
+        background: transparent;
+        color: var(--text-dim);
+        font-family: inherit; font-size: 10px;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        user-select: none;
+    }
+    .chip:hover { color: var(--text); border-color: var(--neon-green); }
+    .chip.active {
+        color: #000;
+        background: var(--chip-color, var(--neon-green));
+        border-color: var(--chip-color, var(--neon-green));
+        box-shadow: 0 0 12px var(--chip-glow, var(--neon-green-glow));
+        font-weight: 700;
+    }
+    .chip.pass.active  { --chip-color: var(--neon-green); --chip-glow: var(--neon-green-glow); }
+    .chip.fail.active  { --chip-color: var(--neon-red);   --chip-glow: var(--neon-red-glow); }
+    .chip.error.active { --chip-color: var(--neon-amber); --chip-glow: var(--neon-amber-glow); }
+    .chip.skip.active  { --chip-color: #888; --chip-glow: rgba(136,136,136,0.4); }
+
+    .search-input {
+        flex: 1 1 180px;
+        min-width: 160px;
+        background: var(--bg);
+        border: 1px solid var(--border-bright);
+        color: var(--text);
+        padding: 6px 10px;
+        font-family: inherit;
+        font-size: 11px;
+        outline: none;
+    }
+    .search-input:focus { border-color: var(--neon-green); box-shadow: 0 0 6px var(--neon-green-glow); }
+    .search-input::placeholder { color: var(--text-faint); }
+
+    /* -- Result rows -- */
+    .results { display: flex; flex-direction: column; gap: 5px; }
+
+    .result {
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--status-color, var(--text-dim));
+        background: var(--bg-panel);
+        transition: border-color 0.15s ease;
+    }
+    .result:hover { border-color: var(--border-bright); border-left-color: var(--status-color); }
+
+    .result.pass  { --status-color: var(--neon-green); --status-glow: var(--neon-green-glow); }
+    .result.fail  { --status-color: var(--neon-red);   --status-glow: var(--neon-red-glow); }
+    .result.error { --status-color: var(--neon-amber); --status-glow: var(--neon-amber-glow); }
+    .result.skip  { --status-color: #888; --status-glow: rgba(136,136,136,0.4); }
+
+    .result.hidden { display: none; }
+
+    .result-head {
+        padding: 9px 14px;
+        display: grid;
+        grid-template-columns: 64px 62px 1fr auto auto;
+        gap: 14px;
+        align-items: center;
+        cursor: pointer;
+    }
+    .result-head:hover { background: rgba(57,255,20,0.02); }
+
+    .status-badge {
+        display: inline-block;
+        padding: 3px 7px;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #000;
+        background: var(--status-color);
+        box-shadow: 0 0 8px var(--status-glow);
+        text-align: center;
+    }
+
+    .method {
+        font-weight: 700;
+        font-size: 10px;
+        color: var(--neon-cyan);
+        letter-spacing: 0.1em;
+    }
+
+    .test-summary {
+        color: var(--text);
+        font-size: 11px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+    }
+    .test-summary .path {
+        color: var(--text-dim);
+        font-size: 10px;
+        display: block;
+    }
+
+    .status-code {
+        font-weight: 700;
+        font-size: 12px;
+        color: var(--status-color);
+        font-variant-numeric: tabular-nums;
+        min-width: 36px;
+        text-align: right;
+    }
+    .status-code.null { color: var(--text-faint); }
+
+    .duration {
+        color: var(--text-dim);
+        font-size: 10px;
+        font-variant-numeric: tabular-nums;
+        min-width: 52px;
+        text-align: right;
+    }
+
+    /* -- Expanded detail -- */
+    .result-body {
+        display: none;
+        padding: 0 14px 14px 14px;
+        border-top: 1px dashed var(--border-bright);
+        margin-top: 2px;
+    }
+    .result.open .result-body { display: block; }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 12px;
+    }
+    .detail-section { min-width: 0; }
+    .detail-section h4 {
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--neon-green);
+        margin-bottom: 5px;
+        padding-bottom: 3px;
+        border-bottom: 1px solid var(--border-bright);
+        font-weight: 700;
+    }
+    pre.code {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        font-size: 10px;
+        color: var(--text);
+        max-height: 280px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin: 0;
+        font-family: inherit;
+    }
+    pre.code::-webkit-scrollbar { width: 6px; height: 6px; }
+    pre.code::-webkit-scrollbar-track { background: var(--bg); }
+    pre.code::-webkit-scrollbar-thumb { background: var(--border-bright); }
+    pre.code::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
+
+    .error-msg {
+        color: var(--neon-red);
+        font-size: 10px;
+        padding: 6px 10px;
+        border: 1px solid var(--neon-red);
+        background: rgba(255,46,99,0.05);
+        margin-top: 8px;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-dim);
+        border: 1px dashed var(--border-bright);
+        display: none;
+        font-size: 11px;
+    }
+    .empty.show { display: block; }
+
+    footer {
+        margin-top: 24px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+        color: var(--text-faint);
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        text-align: center;
+    }
+
+    @media (max-width: 760px) {
+        body { padding: 14px 10px 40px; }
+        h1 { font-size: 20px; }
+        .stats { grid-template-columns: repeat(3, 1fr); }
+        .result-head {
+            grid-template-columns: 56px 1fr auto;
+            gap: 8px;
+        }
+        .method, .duration { display: none; }
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <div class="brand">phlatline // api diagnostic v{{ meta.version }}</div>
+        <h1>flat<span class="accent">line</span><span style="color: var(--text-dim); font-size: 14px; font-weight: 500; margin-left: 12px; letter-spacing: 0;">· diagnostic report</span></h1>
+        <div class="meta-line">
+            <span><strong>{{ meta.target }}</strong></span>
+            <span>RUN {{ meta.timestamp }}</span>
+            <span>{{ meta.duration }}s elapsed</span>
+            {% if meta.fuzz_warning %}<span style="color: var(--neon-amber);">⚠ {{ meta.fuzz_warning }}</span>{% endif %}
+        </div>
+    </header>
+
+    <div class="stats">
+        <div class="stat total">
+            <div class="label">Total</div>
+            <div class="value">{{ summary.total }}</div>
+        </div>
+        <div class="stat pass">
+            <div class="label">Pass</div>
+            <div class="value">{{ summary.pass }}</div>
+        </div>
+        <div class="stat fail">
+            <div class="label">Fail</div>
+            <div class="value">{{ summary.fail }}</div>
+        </div>
+        <div class="stat error">
+            <div class="label">Error</div>
+            <div class="value">{{ summary.error }}</div>
+        </div>
+        <div class="stat skip">
+            <div class="label">Skip</div>
+            <div class="value">{{ summary.skip }}</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="group">
+            <span class="label">Status</span>
+            <button class="chip pass active" data-filter="pass">PASS</button>
+            <button class="chip fail active" data-filter="fail">FAIL</button>
+            <button class="chip error active" data-filter="error">ERROR</button>
+            <button class="chip skip active" data-filter="skip">SKIP</button>
+        </div>
+        <div class="group">
+            <span class="label">Category</span>
+            {% for cat in categories %}
+            <button class="chip active" data-cat="{{ cat }}">{{ cat|upper }}</button>
+            {% endfor %}
+        </div>
+        {% if targets %}
+        <div class="group">
+            <span class="label">Target</span>
+            {% for t in targets %}
+            <button class="chip active" data-target="{{ t.slug }}">{{ t.name|upper }}</button>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <input type="text" class="search-input" placeholder="Search path, operation, summary…" id="search">
+    </div>
+
+    <div class="results" id="results">
+    {% for r in results %}
+        <div class="result {{ r.status }}"
+             data-status="{{ r.status }}"
+             data-cat="{{ r.category }}"
+             {% if r.target_slug %}data-target="{{ r.target_slug }}"{% endif %}
+             data-text="{{ (r.path ~ ' ' ~ r.operation_id ~ ' ' ~ r.summary ~ ' ' ~ r.method ~ ' ' ~ (r.target_name or ''))|lower }}">
+            <div class="result-head" onclick="this.parentElement.classList.toggle('open')">
+                <span class="status-badge">{{ r.status }}</span>
+                <span class="method">{{ r.method }}</span>
+                <div class="test-summary">
+                    {{ r.summary }}
+                    <span class="path">{% if r.target_name %}[{{ r.target_name }}]  •  {% endif %}{{ r.path }}  •  {{ r.category }}</span>
+                </div>
+                <span class="status-code {% if r.status_code is none %}null{% endif %}">
+                    {% if r.status_code is not none %}{{ r.status_code }}{% else %}—{% endif %}
+                </span>
+                <span class="duration">{{ '%.0f'|format(r.duration_ms) }}ms</span>
+            </div>
+            <div class="result-body">
+                {% if r.error %}<div class="error-msg">{{ r.error }}</div>{% endif %}
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <h4>Request</h4>
+                        <pre class="code">{{ r.request|tojson(indent=2) }}</pre>
+                    </div>
+                    <div class="detail-section">
+                        <h4>Response  ·  expected {{ r.expected }}</h4>
+                        <pre class="code">{{ r.response_preview or '(no body)' }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+
+    <div class="empty" id="empty">// no results match current filters</div>
+
+    <footer>End of transmission  ·  {{ meta.timestamp }}</footer>
+</div>
+
+<script>
+(function(){
+    const chips = document.querySelectorAll('.chip');
+    const results = document.querySelectorAll('.result');
+    const search = document.getElementById('search');
+    const empty = document.getElementById('empty');
+
+    chips.forEach(c => c.addEventListener('click', () => {
+        c.classList.toggle('active');
+        apply();
+    }));
+    search.addEventListener('input', apply);
+
+    function apply(){
+        const activeStatuses = new Set(
+            [...document.querySelectorAll('.chip[data-filter].active')].map(c => c.dataset.filter)
+        );
+        const activeCats = new Set(
+            [...document.querySelectorAll('.chip[data-cat].active')].map(c => c.dataset.cat)
+        );
+        const targetChips = [...document.querySelectorAll('.chip[data-target].active')];
+        const hasTargetFilter = document.querySelectorAll('.chip[data-target]').length > 0;
+        const activeTargets = new Set(targetChips.map(c => c.dataset.target));
+        const q = search.value.trim().toLowerCase();
+
+        let visible = 0;
+        results.forEach(r => {
+            const statusOk = activeStatuses.has(r.dataset.status);
+            const catOk = activeCats.has(r.dataset.cat);
+            const targetOk = !hasTargetFilter || activeTargets.has(r.dataset.target);
+            const textOk = !q || r.dataset.text.includes(q);
+            const show = statusOk && catOk && targetOk && textOk;
+            r.classList.toggle('hidden', !show);
+            if (show) visible++;
+        });
+        empty.classList.toggle('show', visible === 0);
+    }
+})();
+</script>
+</body>
+</html>

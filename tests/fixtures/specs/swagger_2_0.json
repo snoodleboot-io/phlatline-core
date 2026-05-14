@@ -1,0 +1,78 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Sample Payments API",
+    "version": "1.0.0"
+  },
+  "host": "api.example.com",
+  "basePath": "/v1",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "securityDefinitions": {
+    "bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "paths": {
+    "/charges": {
+      "post": {
+        "summary": "Create a charge",
+        "operationId": "createCharge",
+        "security": [{"bearer": []}],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {"$ref": "#/definitions/ChargeRequest"}
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {"$ref": "#/definitions/Charge"}
+          },
+          "400": {"description": "Bad request"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/charges/{id}": {
+      "get": {
+        "summary": "Get a charge",
+        "operationId": "getCharge",
+        "security": [{"bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "id", "required": true, "type": "string"}
+        ],
+        "responses": {
+          "200": {"description": "OK", "schema": {"$ref": "#/definitions/Charge"}},
+          "404": {"description": "Not found"}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ChargeRequest": {
+      "type": "object",
+      "required": ["amount", "currency"],
+      "properties": {
+        "amount": {"type": "integer", "minimum": 1, "maximum": 999999},
+        "currency": {"type": "string", "enum": ["USD", "EUR", "GBP"]},
+        "description": {"type": "string"}
+      }
+    },
+    "Charge": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "amount": {"type": "integer"},
+        "currency": {"type": "string"},
+        "status": {"type": "string"}
+      }
+    }
+  }
+}

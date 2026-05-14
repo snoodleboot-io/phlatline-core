@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: Sample Payments API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ChargeRequest:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: integer
+          minimum: 1
+          maximum: 999999
+        currency:
+          type: string
+          enum: [USD, EUR, GBP]
+        description:
+          type: string
+    Charge:
+      type: object
+      properties:
+        id: {type: string}
+        amount: {type: integer}
+        currency: {type: string}
+        status: {type: string}
+paths:
+  /charges:
+    post:
+      summary: Create a charge
+      operationId: createCharge
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ChargeRequest'}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Charge'}
+        '400': {description: Bad request}
+        '401': {description: Unauthorized}
+  /charges/{id}:
+    get:
+      summary: Get a charge
+      operationId: getCharge
+      security: [{bearerAuth: []}]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Charge'}
+        '404': {description: Not found}

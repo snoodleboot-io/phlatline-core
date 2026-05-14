@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'none';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src https://fonts.gstatic.com;
+    script-src 'unsafe-inline';
+    img-src 'self' data:;
+    connect-src 'none';
+    frame-ancestors 'none';
+    base-uri 'none';
+    form-action 'none';
+">
+<meta name="referrer" content="no-referrer">
+<title>Phlatline — {{ project.name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg: #000000; --bg-panel: #0a0a0a; --border: #1a1a1a; --border-bright: #222;
+        --text: #e6ffe6; --text-dim: #6a7a6a; --text-faint: #3a4a3a;
+        --neon-green: #39ff14; --neon-green-glow: rgba(57,255,20,0.55);
+        --neon-red: #ff2e63; --neon-red-glow: rgba(255,46,99,0.55);
+        --neon-amber: #ffb300; --neon-amber-glow: rgba(255,179,0,0.55);
+        --neon-cyan: #00f0ff; --neon-cyan-glow: rgba(0,240,255,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+        background: var(--bg); color: var(--text);
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 13px; line-height: 1.55; min-height: 100vh;
+    }
+    body {
+        background:
+            radial-gradient(ellipse 80% 60% at 50% -10%, rgba(57,255,20,0.08), transparent 60%),
+            radial-gradient(ellipse 40% 40% at 100% 100%, rgba(0,240,255,0.04), transparent 70%),
+            var(--bg);
+        padding: 24px 20px 60px;
+    }
+    body::before {
+        content: ''; position: fixed; inset: 0;
+        background: repeating-linear-gradient(0deg, transparent 0, transparent 2px,
+            rgba(57,255,20,0.012) 2px, rgba(57,255,20,0.012) 3px);
+        pointer-events: none; z-index: 1;
+    }
+    .wrap { max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
+
+    header {
+        border: 1px solid var(--neon-green);
+        background: linear-gradient(180deg, rgba(57,255,20,0.04), transparent);
+        padding: 22px 26px; margin-bottom: 20px; position: relative;
+        box-shadow: 0 0 0 1px rgba(57,255,20,0.08), 0 0 30px -10px var(--neon-green-glow);
+    }
+    header::before, header::after {
+        content: ''; position: absolute; width: 12px; height: 12px;
+        border: 2px solid var(--neon-green);
+    }
+    header::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+    header::after  { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+    .brand {
+        font-family: 'Space Mono', monospace; font-weight: 700; font-size: 10px;
+        letter-spacing: 0.3em; color: var(--neon-green);
+        text-transform: uppercase; opacity: 0.85; margin-bottom: 6px;
+    }
+    .brand::before { content: '▸ '; }
+    h1 {
+        font-weight: 800; font-size: 28px; letter-spacing: -0.03em;
+        color: var(--text); text-shadow: 0 0 22px var(--neon-green-glow);
+        margin-bottom: 4px;
+    }
+    h1 .flat { color: var(--text); }
+    h1 .line { color: var(--neon-green); }
+    h1 .proj { color: var(--text-dim); font-size: 16px; font-weight: 500; margin-left: 10px; letter-spacing: 0; }
+    .meta-line {
+        color: var(--text-dim); font-size: 11px; margin-top: 8px;
+        display: flex; gap: 18px; flex-wrap: wrap;
+    }
+    .meta-line strong { color: var(--text); font-weight: 500; }
+
+    .totals {
+        display: grid; grid-template-columns: repeat(5, 1fr);
+        gap: 10px; margin-bottom: 22px;
+    }
+    .total-cell {
+        border: 1px solid var(--border); background: var(--bg-panel);
+        padding: 14px 16px; position: relative; overflow: hidden;
+    }
+    .total-cell::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+        background: var(--c, var(--neon-green));
+        box-shadow: 0 0 10px var(--g, var(--neon-green-glow));
+    }
+    .total-cell .lbl {
+        font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+        color: var(--text-dim); margin-bottom: 4px;
+    }
+    .total-cell .val {
+        font-size: 22px; font-weight: 700; color: var(--c, var(--text));
+        font-variant-numeric: tabular-nums;
+    }
+    .total-cell.total { --c: var(--neon-cyan); --g: var(--neon-cyan-glow); }
+    .total-cell.pass  { --c: var(--neon-green); --g: var(--neon-green-glow); }
+    .total-cell.fail  { --c: var(--neon-red);   --g: var(--neon-red-glow); }
+    .total-cell.error { --c: var(--neon-amber); --g: var(--neon-amber-glow); }
+    .total-cell.skip  { --c: #888; --g: rgba(136,136,136,0.4); }
+
+    .section-title {
+        font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+        color: var(--neon-green); margin-bottom: 12px; padding-bottom: 8px;
+        border-bottom: 1px dashed var(--border-bright); display: flex;
+        justify-content: space-between; align-items: baseline;
+    }
+    .section-title a { color: var(--text-dim); text-decoration: none; font-size: 10px; letter-spacing: 0.15em; }
+    .section-title a:hover { color: var(--neon-green); }
+
+    .target-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 12px;
+    }
+
+    .target-card {
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--health, var(--neon-green));
+        background: var(--bg-panel);
+        padding: 16px 18px;
+        text-decoration: none;
+        color: var(--text);
+        display: block;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+        position: relative;
+    }
+    .target-card:hover {
+        border-color: var(--border-bright);
+        border-left-color: var(--health);
+        transform: translateX(2px);
+    }
+    .target-card.healthy { --health: var(--neon-green); }
+    .target-card.sick    { --health: var(--neon-red); }
+    .target-card.errored { --health: var(--neon-amber); }
+
+    .tc-head {
+        display: flex; justify-content: space-between; align-items: baseline;
+        margin-bottom: 6px;
+    }
+    .tc-name {
+        font-weight: 700; font-size: 14px; color: var(--text); letter-spacing: -0.01em;
+    }
+    .tc-health-badge {
+        display: inline-block; padding: 2px 7px; font-size: 9px; font-weight: 700;
+        letter-spacing: 0.15em; text-transform: uppercase; color: #000;
+        background: var(--health); box-shadow: 0 0 8px var(--health);
+    }
+    .tc-health-badge.healthy { box-shadow: 0 0 8px var(--neon-green-glow); }
+    .tc-health-badge.sick    { box-shadow: 0 0 8px var(--neon-red-glow); }
+    .tc-health-badge.errored { box-shadow: 0 0 8px var(--neon-amber-glow); }
+
+    .tc-url {
+        font-size: 10px; color: var(--text-dim); margin-bottom: 12px;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tc-stats {
+        display: grid; grid-template-columns: repeat(5, 1fr);
+        gap: 6px; margin-top: 10px; padding-top: 10px;
+        border-top: 1px dashed var(--border-bright);
+    }
+    .tc-stat { text-align: center; }
+    .tc-stat-lbl {
+        font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase;
+        color: var(--text-faint); margin-bottom: 2px;
+    }
+    .tc-stat-val {
+        font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;
+        color: var(--cs, var(--text));
+    }
+    .tc-stat.pass  { --cs: var(--neon-green); }
+    .tc-stat.fail  { --cs: var(--neon-red); }
+    .tc-stat.error { --cs: var(--neon-amber); }
+    .tc-stat.skip  { --cs: #888; }
+
+    .tc-meta {
+        font-size: 9px; color: var(--text-faint);
+        letter-spacing: 0.1em; margin-top: 8px; display: flex;
+        justify-content: space-between;
+    }
+
+    .tc-err-banner {
+        background: rgba(255, 179, 0, 0.08); border: 1px solid var(--neon-amber);
+        padding: 6px 10px; font-size: 10px; color: var(--neon-amber);
+        margin-top: 10px;
+    }
+
+    footer {
+        margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border);
+        color: var(--text-faint); font-size: 9px; letter-spacing: 0.15em;
+        text-transform: uppercase; text-align: center;
+    }
+
+    @media (max-width: 760px) {
+        .totals { grid-template-columns: repeat(3, 1fr); }
+        .tc-stats { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <div class="brand">phlatline // project report v{{ version }}</div>
+        <h1><span class="flat">flat</span><span class="line">line</span><span class="proj">· {{ project.name }}</span></h1>
+        <div class="meta-line">
+            <span><strong>{{ targets|length }} targets</strong></span>
+            <span>RUN {{ combined_meta.timestamp }}</span>
+            <span>{{ combined_meta.duration }}s elapsed</span>
+            <span>{% if project.parallel %}parallel · max {{ project.max_parallel_targets }}{% else %}sequential{% endif %}</span>
+        </div>
+    </header>
+
+    <div class="totals">
+        <div class="total-cell total"><div class="lbl">Total</div><div class="val">{{ combined_summary.total }}</div></div>
+        <div class="total-cell pass"><div class="lbl">Pass</div><div class="val">{{ combined_summary.pass }}</div></div>
+        <div class="total-cell fail"><div class="lbl">Fail</div><div class="val">{{ combined_summary.fail }}</div></div>
+        <div class="total-cell error"><div class="lbl">Error</div><div class="val">{{ combined_summary.error }}</div></div>
+        <div class="total-cell skip"><div class="lbl">Skip</div><div class="val">{{ combined_summary.skip }}</div></div>
+    </div>
+
+    <div class="section-title">
+        <span>▸ Targets</span>
+        <a href="./report.html">Open combined report →</a>
+    </div>
+
+    <div class="target-grid">
+    {% for t in targets %}
+        {% set health = 'healthy' %}
+        {% if t.error %}{% set health = 'errored' %}
+        {% elif t.summary.fail > 0 or t.summary.error > 0 %}{% set health = 'sick' %}
+        {% endif %}
+        <a class="target-card {{ health }}" href="./{{ t.slug }}/report.html">
+            <div class="tc-head">
+                <span class="tc-name">{{ t.name }}</span>
+                <span class="tc-health-badge {{ health }}">
+                    {% if health == 'healthy' %}phlatlined
+                    {% elif health == 'sick' %}spiking
+                    {% else %}errored
+                    {% endif %}
+                </span>
+            </div>
+            <div class="tc-url">{{ t.base_url or t.schema }}</div>
+            {% if t.error %}
+            <div class="tc-err-banner">{{ t.error }}</div>
+            {% else %}
+            <div class="tc-stats">
+                <div class="tc-stat"><div class="tc-stat-lbl">total</div><div class="tc-stat-val">{{ t.summary.total }}</div></div>
+                <div class="tc-stat pass"><div class="tc-stat-lbl">pass</div><div class="tc-stat-val">{{ t.summary.pass }}</div></div>
+                <div class="tc-stat fail"><div class="tc-stat-lbl">fail</div><div class="tc-stat-val">{{ t.summary.fail }}</div></div>
+                <div class="tc-stat error"><div class="tc-stat-lbl">err</div><div class="tc-stat-val">{{ t.summary.error }}</div></div>
+                <div class="tc-stat skip"><div class="tc-stat-lbl">skip</div><div class="tc-stat-val">{{ t.summary.skip }}</div></div>
+            </div>
+            {% endif %}
+            <div class="tc-meta">
+                <span>{{ t.duration }}s elapsed</span>
+                <span>drill down →</span>
+            </div>
+        </a>
+    {% endfor %}
+    </div>
+
+    <footer>End of transmission  ·  {{ combined_meta.timestamp }}</footer>
+</div>
+</body>
+</html>

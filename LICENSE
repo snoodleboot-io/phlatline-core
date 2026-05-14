@@ -1,0 +1,16 @@
+Business Source License 1.1
+
+Parameters
+    Licensor:             Phlatline
+    Licensed Work:        phlatline-core 3.0.0 (contents of packages/phlatline-oss/)
+    Additional Use Grant: You may use the Licensed Work for any purpose,
+                          including commercial use, except offering a hosted
+                          or managed service that competes with Phlatline Cloud.
+    Change Date:          Four years from the date the Licensed Work is first
+                          published to PyPI.
+    Change License:       Apache License, Version 2.0
+
+For the full BSL 1.1 terms, see https://mariadb.com/bsl11
+
+Applies only to code under packages/phlatline-oss/. Other portions of this
+repository are under separate licenses. See NOTICE for the licensing map.
