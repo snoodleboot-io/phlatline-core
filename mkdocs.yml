@@ -1,0 +1,68 @@
+site_name: Phlatline
+site_description: OpenAPI-driven API diagnostic CLI — find boundary failures, fuzz hits, and schema drift in minutes.
+site_url: https://docs.phlatline.dev
+repo_url: https://github.com/phlatline/phlatline-oss
+repo_name: phlatline/phlatline-oss
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: black
+    accent: green
+  font:
+    text: Inter
+    code: JetBrains Mono
+  logo: assets/logo.svg
+  favicon: assets/favicon.ico
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Quickstart: index.md
+  - Installation: install.md
+  - CLI reference: cli-reference.md
+  - Configuration: config-reference.md
+  - CI recipes: ci-recipes.md
+  - FAQ: faq.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/phlatline/phlatline-oss
+  version:
+    provider: mike

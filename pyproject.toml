@@ -43,6 +43,10 @@ dev = [
     "mypy >= 1.10",
     "bandit >= 1.7",
 ]
+docs = [
+    "mkdocs-material >= 9.5",
+    "mkdocs-minify-plugin >= 0.8",
+]
 
 [project.scripts]
 phlatline = "phlatline.cli:main"
@@ -74,7 +78,7 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
 ]
-fail_under = 50  # S0.1 scaffolding level; raised to 85 in S1.1.1
+fail_under = 85  # S1.1.1 target
 
 [tool.ruff]
 line-length = 100
