@@ -247,6 +247,15 @@ def scan(ctx: click.Context, schema: str, base_url: str | None,
     completed = _run_to_completed(run, project_name=target.name)
     _emit_to_sinks(completed)
 
+    # Upload to Phlatline Cloud if a token is configured
+    from phlatline.cloud import upload_run as _cloud_upload
+    try:
+        run_url = _cloud_upload(completed)
+        if run_url:
+            click.echo(f"▸ Cloud run: {run_url}")
+    except Exception as e:  # noqa: BLE001
+        click.echo(f"[!] Cloud upload failed: {e}", err=True)
+
     # The local sink already wrote files via emit; report the summary
     summary = summarize(run.results)
     summary_dict = {
