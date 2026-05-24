@@ -39,6 +39,9 @@ nav:
   - Configuration: config-reference.md
   - CI recipes: ci-recipes.md
   - FAQ: faq.md
+  - Enterprise:
+    - Setting up SSO/SAML: enterprise/sso-setup.md
+    - Automated user provisioning (SCIM 2.0): enterprise/scim.md
 
 markdown_extensions:
   - admonition
