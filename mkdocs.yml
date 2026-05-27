@@ -39,6 +39,11 @@ nav:
   - Configuration: config-reference.md
   - CI recipes: ci-recipes.md
   - FAQ: faq.md
+  - Cloud:
+    - Plan enforcement: cloud/plan-enforcement.md
+  - Ops:
+    - Email delivery: ops/email-delivery.md
+    - SAML assertion log cleanup: ops/saml-assertion-log-cleanup.md
   - Enterprise:
     - Setting up SSO/SAML: enterprise/sso-setup.md
     - Automated user provisioning (SCIM 2.0): enterprise/scim.md
