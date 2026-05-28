@@ -62,6 +62,7 @@ _EE_MODULE_NAME = "phlatline_ee"
 
 
 def _print_banner() -> None:
+    """Render the ASCII art banner with the current OSS and SDK version strings."""
     click.echo(_BANNER_TEMPLATE.format(version=__version__, sdk=SDK_VERSION))
 
 
@@ -88,6 +89,21 @@ _CONFIG_YAML_SUFFIXES = frozenset({".yaml", ".yml"})
 
 
 def _load_auth_config(path: str | None) -> dict[str, Any] | None:
+    """Parse an auth config file and return the inner ``auth`` mapping.
+
+    Supports both YAML (``.yaml``/``.yml``) and JSON formats.  The file is
+    expected to have a top-level ``auth:`` key; the value of that key is what
+    gets returned and forwarded to the auth-strategy layer.
+
+    Args:
+        path: Filesystem path to the config file, or ``None`` to skip auth.
+
+    Returns:
+        The parsed ``auth`` dict, or ``None`` if no path was given.
+
+    Raises:
+        click.ClickException: If the file does not exist.
+    """
     if not path:
         return None
     p = Path(path)
@@ -100,6 +116,15 @@ def _load_auth_config(path: str | None) -> dict[str, Any] | None:
 
 
 def _format_summary_line(summary: dict[str, int]) -> str:
+    """Format a summary dict as a single human-readable result line.
+
+    Args:
+        summary: Mapping with keys ``total``, ``pass``, ``fail``, ``error``,
+            and ``skip``.
+
+    Returns:
+        A fixed-width string suitable for display between divider lines.
+    """
     return (
         f"  TOTAL: {summary['total']}   "
         f"PASS: {summary['pass']}   "
@@ -113,6 +138,19 @@ _SUMMARY_DIVIDER = "─" * 56
 
 
 def _run_to_completed(run: TargetRun, project_name: str) -> CompletedRun:
+    """Convert a raw ``TargetRun`` into the SDK ``CompletedRun`` wire format.
+
+    The conversion reconstructs ``started_at`` from the run's duration so
+    that sinks always receive an absolute timestamp regardless of when the
+    run object was created.
+
+    Args:
+        run: The finished target run produced by ``run_target()``.
+        project_name: The logical project name to embed in the payload.
+
+    Returns:
+        A ``CompletedRun`` ready for fan-out to registered ``ResultSink``s.
+    """
     summary = summarize(run.results)
     return CompletedRun(
         project_name=project_name,
@@ -131,6 +169,14 @@ def _run_to_completed(run: TargetRun, project_name: str) -> CompletedRun:
 
 
 def _emit_to_sinks(completed: CompletedRun) -> None:
+    """Fan a completed run out to every registered ``ResultSink``.
+
+    Errors from individual sinks are printed to stderr but never re-raised,
+    so a misbehaving sink cannot abort the CLI process.
+
+    Args:
+        completed: The finished run payload to deliver.
+    """
     for sink in get_result_sinks():
         try:
             sink.emit(completed)
@@ -143,6 +189,12 @@ _DEFAULT_DRAIN_TIMEOUT_S = 10.0
 
 
 def _drain_all() -> None:
+    """Flush all registered sinks and alert channels before process exit.
+
+    Each component's ``drain()`` is called with the default timeout.  Errors
+    are logged to stderr so that the CLI can still exit cleanly even if a
+    remote sync fails.
+    """
     timeout = _DEFAULT_DRAIN_TIMEOUT_S
     for sink in get_result_sinks():
         try:
@@ -159,6 +211,18 @@ def _drain_all() -> None:
 
 
 def _report_dir_override(output_dir: str | None) -> Path:
+    """Apply an optional output-directory override and return the active path.
+
+    When ``output_dir`` is provided, the global ``settings.report.output_dir``
+    is updated in-place so that all downstream report writers use the same
+    location without needing to receive the path explicitly.
+
+    Args:
+        output_dir: CLI-supplied directory string, or ``None`` to keep default.
+
+    Returns:
+        The resolved output directory as a ``Path``.
+    """
     if output_dir:
         settings.report.output_dir = Path(output_dir)
     return settings.report.output_dir
