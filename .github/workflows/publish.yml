@@ -1,0 +1,37 @@
+name: Publish
+
+# Publishes phlatline-core to PyPI when a v* tag is pushed.
+# Uses PyPI Trusted Publishing (OIDC) — no API token stored as a secret.
+# One-time setup on PyPI: add this repo + the `publish.yml` workflow +
+# the `pypi` environment as a trusted publisher for the `phlatline-core` project.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build-and-publish:
+    name: build + publish to PyPI
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # required for Trusted Publishing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build sdist + wheel
+        run: |
+          pip install build
+          python -m build
+      - name: Verify tag matches package version
+        run: |
+          PKG_VERSION="$(python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match pyproject version $PKG_VERSION"
+            exit 1
+          fi
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

@@ -48,6 +48,12 @@ docs = [
     "mkdocs-minify-plugin >= 0.8",
 ]
 
+[project.urls]
+Homepage = "https://phlatline.dev"
+Repository = "https://github.com/snoodleboot-io/phlatline-oss"
+Documentation = "https://snoodleboot-io.github.io/phlatline-oss/"
+Issues = "https://github.com/snoodleboot-io/phlatline-oss/issues"
+
 [project.scripts]
 phlatline = "phlatline.cli:main"
 
