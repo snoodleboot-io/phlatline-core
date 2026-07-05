@@ -3,8 +3,8 @@
 **OpenAPI-driven API diagnostic CLI.**  
 Point it at a spec, get a report of boundary failures, fuzz hits, and schema drift — in minutes.
 
-[![CI](https://github.com/phlatline/phlatline-oss/actions/workflows/ci.yml/badge.svg)](https://github.com/phlatline/phlatline-oss/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/phlatline/phlatline-oss/branch/main/graph/badge.svg)](https://codecov.io/gh/phlatline/phlatline-oss)
+[![CI](https://github.com/snoodleboot-io/phlatline-core/actions/workflows/ci.yml/badge.svg)](https://github.com/snoodleboot-io/phlatline-core/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/snoodleboot-io/phlatline-core/branch/main/graph/badge.svg)](https://codecov.io/gh/snoodleboot-io/phlatline-core)
 [![PyPI](https://img.shields.io/pypi/v/phlatline-core)](https://pypi.org/project/phlatline-core/)
 [![License: BSL 1.1](https://img.shields.io/badge/license-BSL%201.1-blue)](LICENSE)
 
@@ -115,8 +115,8 @@ phlatline project FILE [OPTIONS]
 ## Development
 
 ```bash
-git clone https://github.com/phlatline/phlatline-oss
-cd phlatline-oss
+git clone https://github.com/snoodleboot-io/phlatline-core
+cd phlatline-core
 python -m venv .venv && source .venv/bin/activate
 pip install -e .[dev]
 pytest

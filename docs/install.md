@@ -23,7 +23,7 @@ phlatline --version
 ## Troubleshooting
 
 For a full troubleshooting guide including network errors, auth failures, and Docker usage,
-see [INSTALL.md](https://github.com/phlatline/phlatline-oss/blob/main/INSTALL.md) in the repository.
+see [INSTALL.md](https://github.com/snoodleboot-io/phlatline-core/blob/main/INSTALL.md) in the repository.
 
 ### Quick reference
 

@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for phlatline-oss.
+"""Shared pytest fixtures for phlatline-core.
 
 S0.1 scaffolding — holds only what the sample scenarios need.
 Real fixtures (loaded schemas, demo server, executor instances,

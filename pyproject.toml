@@ -50,9 +50,9 @@ docs = [
 
 [project.urls]
 Homepage = "https://phlatline.dev"
-Repository = "https://github.com/snoodleboot-io/phlatline-oss"
-Documentation = "https://snoodleboot-io.github.io/phlatline-oss/"
-Issues = "https://github.com/snoodleboot-io/phlatline-oss/issues"
+Repository = "https://github.com/snoodleboot-io/phlatline-core"
+Documentation = "https://snoodleboot-io.github.io/phlatline-core/"
+Issues = "https://github.com/snoodleboot-io/phlatline-core/issues"
 
 [project.scripts]
 phlatline = "phlatline.cli:main"

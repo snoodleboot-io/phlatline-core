@@ -1,8 +1,8 @@
 site_name: Phlatline
 site_description: OpenAPI-driven API diagnostic CLI — find boundary failures, fuzz hits, and schema drift in minutes.
 site_url: https://docs.phlatline.dev
-repo_url: https://github.com/phlatline/phlatline-oss
-repo_name: phlatline/phlatline-oss
+repo_url: https://github.com/snoodleboot-io/phlatline-core
+repo_name: snoodleboot-io/phlatline-core
 edit_uri: edit/main/docs/
 
 docs_dir: docs
@@ -71,6 +71,6 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/phlatline/phlatline-oss
+      link: https://github.com/snoodleboot-io/phlatline-core
   version:
     provider: mike

@@ -114,7 +114,7 @@ Open `report.html` in any browser. The report shows:
 ### Can I integrate the JSON output into my CI pipeline?
 
 Yes. `results.json` contains structured data you can parse with `jq` or any JSON library.
-The schema matches the `CompletedRun` Pydantic model in [sdk/models.py](https://github.com/phlatline/phlatline-oss/blob/main/phlatline/sdk/models.py).
+The schema matches the `CompletedRun` Pydantic model in [sdk/models.py](https://github.com/snoodleboot-io/phlatline-core/blob/main/phlatline/sdk/models.py).
 
 ---
 

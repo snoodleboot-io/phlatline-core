@@ -201,7 +201,7 @@ if you hit unexpected dependency errors, try 3.11 or 3.12 first.
 
 ## Still stuck?
 
-Open an issue at <https://github.com/phlatline/phlatline-oss/issues> and include:
+Open an issue at <https://github.com/snoodleboot-io/phlatline-core/issues> and include:
 
 - `phlatline --version` output
 - `python --version` output
