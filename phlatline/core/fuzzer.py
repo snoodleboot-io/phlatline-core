@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore", message="Overriding standard format")
 
 _SCHEMATHESIS_MISSING_MSG = (
     "Schemathesis not installed — fuzzing skipped. "
-    "Install with: pip install schemathesis"
+    "Install with: pip install 'phlatline-core[fuzz]'"
 )
 _SERVER_ERROR_STATUS_THRESHOLD = 500
 

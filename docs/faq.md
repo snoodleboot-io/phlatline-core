@@ -17,6 +17,9 @@ valid inputs within your schema's type constraints. This finds unexpected 500 er
 triggered by edge-case inputs your team never thought to test. Fuzzing runs after the
 happy-path and boundary cases.
 
+It requires the optional `[fuzz]` extra (`pip install 'phlatline-core[fuzz]'`). Without it the
+stage reports itself as skipped and the rest of the scan runs normally.
+
 ### Does Phlatline modify production data?
 
 Yes, it sends real HTTP requests to whatever `base_url` you point it at. On `prod`,

@@ -32,6 +32,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Fuzzing is optional at runtime — phlatline.core.fuzzer degrades gracefully
+# when Schemathesis is absent. 4.0 is the floor: the fuzzer uses the
+# `schemathesis.openapi.from_path` / `schema.config` API introduced there.
+fuzz = [
+    "schemathesis >= 4.0",
+]
 dev = [
     "pytest >= 8.0",
     "pytest-bdd >= 7.0",
