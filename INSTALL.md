@@ -21,6 +21,25 @@ pip install phlatline-core
 phlatline --version
 ```
 
+## Optional: the fuzzing stage
+
+The fuzz stage is powered by [Schemathesis](https://schemathesis.readthedocs.io/),
+which is **not** installed by default — it pulls in Hypothesis and a larger
+dependency tree than most users need. Without it, `phlatline scan` still runs the
+happy-path, boundary, and auth-missing stages and reports the fuzz stage as skipped:
+
+```
+[!] Schemathesis not installed — fuzzing skipped. Install with: pip install 'phlatline-core[fuzz]'
+```
+
+To enable it:
+
+```bash
+pip install 'phlatline-core[fuzz]'
+```
+
+Use `--no-fuzz` to skip the stage explicitly even when it is installed.
+
 ---
 
 ## Troubleshooting

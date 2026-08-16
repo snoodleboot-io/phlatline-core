@@ -6,10 +6,14 @@ report of boundary failures, fuzz hits, and schema drift — in minutes, not hou
 ## Install
 
 ```bash
-pip install phlatline-core
+pip install 'phlatline-core[fuzz]'
 ```
 
 Requires Python **3.11, 3.12, or 3.13**.
+
+The `[fuzz]` extra pulls in [Schemathesis](https://schemathesis.readthedocs.io/) for the fuzz
+stage. Plain `pip install phlatline-core` works too — every other stage runs, and the fuzz
+stage reports itself as skipped. See [Installation](install.md) for details.
 
 ## Your first diagnostic
 

@@ -13,12 +13,16 @@ Point it at a spec, get a report of boundary failures, fuzz hits, and schema dri
 ## Quickstart
 
 ```bash
-pip install phlatline-core
+pip install 'phlatline-core[fuzz]'
 phlatline scan https://petstore3.swagger.io/api/v3/openapi.json
 ```
 
 That's it. Phlatline loads the spec, generates boundary and fuzz test cases, runs them against the
 live API, and writes an HTML report to `./phlatline_results/`.
+
+The `[fuzz]` extra pulls in [Schemathesis](https://schemathesis.readthedocs.io/) for the fuzz
+stage. Plain `pip install phlatline-core` works too — every other stage runs, and the fuzz stage
+reports itself as skipped.
 
 ### With a local spec
 
@@ -73,7 +77,7 @@ phlatline project phlatline.yaml
 |---|---|
 | **Happy path** | Verifies 2xx responses for valid inputs |
 | **Boundary** | Tests min/max integers, empty strings, max-length strings, `MAX_INT32` |
-| **Fuzz** | Random valid inputs via Hypothesis — finds unexpected 500s |
+| **Fuzz** | Random valid inputs via Hypothesis — finds unexpected 500s (needs the `[fuzz]` extra) |
 | **Auth missing** | Confirms the API rejects unauthenticated requests (401/403) |
 
 ---
